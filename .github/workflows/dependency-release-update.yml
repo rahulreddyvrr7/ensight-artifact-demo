@@ -1,0 +1,59 @@
+name: Build and Update Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up build environment
+        run: |
+          chmod +x scripts/*.sh
+          mkdir -p output
+
+      - name: Build Dependencies
+        run: ./scripts/build_dependencies.sh
+
+      - name: Package Dependencies
+        run: ./scripts/create_dependency_artifact.sh
+
+      - name: Build Main Code
+        run: ./scripts/build_main.sh
+
+      - name: Check if release exists
+        id: check_release
+        run: |
+          RELEASE_TAG="release-v1.0.0"
+          echo "Checking if release $RELEASE_TAG exists..."
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release if not exists
+        if: steps.check_release.outputs.exists == 'false'
+        run: |
+          gh release create release-v1.0.0 --title "release-v1.0.0" --notes "Initial automated release"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload/Update artifacts in release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: release-v1.0.0
+          files: |
+            dependencies.zip
+            output/package/main_build.txt
+          token: ${{ secrets.GITHUB_TOKEN }}
+          overwrite: true
