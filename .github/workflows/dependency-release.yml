@@ -1,14 +1,14 @@
-name: Dependency Package Release
+name: Build and Publish Dependencies
 
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  build-and-upload:
+  build-and-publish:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,8 +19,8 @@ jobs:
       - name: Build dependency packages
         run: bash scripts/create_dependency_artifact.sh
 
-      - name: Update release with new packages
+      - name: Upload dependency packages to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ env.RELEASE_TAG }}
-        run: bash scripts/update_release_packages.sh
+        run: bash scripts/upload_release_packages.sh
