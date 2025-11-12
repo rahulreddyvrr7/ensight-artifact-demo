@@ -1,0 +1,26 @@
+name: Dependency Package Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set release version
+        run: echo "RELEASE_TAG=release-v1.0.0" >> $GITHUB_ENV
+
+      - name: Build dependency packages
+        run: bash scripts/create_dependency_artifact.sh
+
+      - name: Update release with new packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
+        run: bash scripts/update_release_packages.sh
