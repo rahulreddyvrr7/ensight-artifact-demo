@@ -1,14 +1,14 @@
-name: Main Project Build Using Release Packages
+name: Main Build Using Release Packages
 
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -16,13 +16,11 @@ jobs:
       - name: Set release version
         run: echo "RELEASE_TAG=release-v1.0.0" >> $GITHUB_ENV
 
-      - name: Download dependency packages from release
+      - name: Download dependency packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ env.RELEASE_TAG }}
-        run: |
-          echo "📦 Downloading dependency packages from $RELEASE_TAG..."
-          bash scripts/download_release_packages.sh
+        run: bash scripts/download_release_packages.sh
 
-      - name: Build main project using dependencies
+      - name: Build project using dependencies
         run: bash scripts/build_project.sh
